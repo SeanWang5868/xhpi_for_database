@@ -1,28 +1,30 @@
 import os
 import sys
+import config
+import pandas as pd
+import gzip
+import gemmi
 from tqdm import tqdm
 from datetime import datetime
 import wget
-import os
-import gzip
-import subprocess
-import gemmi
-import pandas as pd
 from calculate import get_info, calculator, append_result, rename, printer, Plevin, Plevin_append_result
+from addH import addH
 
 printer.print_xhpi()
 
-# create a folder
+# Create a folder with today's date as the name
 today = datetime.now().strftime('%Y-%m-%d')
 output_dir = os.path.join(".", today)
 os.makedirs(output_dir, exist_ok=True)
 
 print(f"Output directory created: {output_dir}")
 
-# 4 charactors PDB name
+# Receive 4-letter PDB names for download
 pdb_names = []
-print("Enter 4-letter PDB names separated by commas (e.g., 12as,5FJJ,1Gn0):")
+print("Enter 4-letter PDB names separated by commas (e.g., ABCD,EFGH,IJKL):")
 input_str = input("Enter PDB names: ").strip().upper()
+
+# Process the input string, remove spaces, and split by comma
 pdb_names = [name for name in input_str.split(',') if len(name) == 4]
 
 if len(pdb_names) == 0:
@@ -31,129 +33,31 @@ if len(pdb_names) == 0:
 
 print(f"PDB names to be processed: {', '.join(pdb_names)}")
 
-# save PDB files to folder
+# Download PDB files and save them to the folder
 for pdb in tqdm(pdb_names, desc="Downloading PDB files"):
     url = f"https://files.rcsb.org/download/{pdb}.cif.gz"
     output_path = os.path.join(output_dir, f"{pdb}.cif.gz")
+    
+    if os.path.exists(output_path):
+        print(f"\n{pdb} already exists in {output_path}. Skipping download.")
+        continue
     try:
         wget.download(url, output_path)
         print(f"\nDownloaded and saved {pdb} to {output_path}")
     except Exception as e:
         print(f"Error downloading {pdb}: {e}")
 
-# choose the method: Hudson or Plevin
+# Get user input for the method
 method = input("Enter method (Hudson or Plevin): ").strip().lower()
 
 if method not in ['hudson', 'plevin']:
     print("Invalid method. Please enter 'Hudson' or 'Plevin'.")
     sys.exit(1)
 
+# Process the downloaded files and calculate XHPI
 gz_files = [os.path.join(output_dir, f"{pdb_name}.cif.gz") for pdb_name in pdb_names]
 
-# set the path of Monomer library
-os.environ['CLIBD_MON'] = '/Volumes/Sean/pdb_mirror/monomer/monomers_17June'
-
-root_dir = today
-# root_dir = "/Users/seanwang/Library/CloudStorage/GoogleDrive-bql506@york.ac.uk/My Drive/AlphaFold/pdb_mirror/data/structures/divided"
-# output_dir = "/Volumes/Sean/pdb_mirror/Add_H/added_H_Test"
-missing_monomers_file = os.path.join(output_dir, "missing_monomers.csv")
-
-def is_gzip_file(filepath):
-    with open(filepath, 'rb') as f:
-        return f.read(2) == b'\x1f\x8b'
-
-# the df to save the missing monomers
-missing_monomers_df = pd.DataFrame(columns=["file", "monomer"])
-
-def remove_residue_from_structure(structure, residue_name):
-    for model in structure:
-        for chain in model:
-            residues_to_remove = [i for i, res in enumerate(chain) if res.name == residue_name]
-            for i in reversed(residues_to_remove):
-                del chain[i]  # use __delitem__ to delete the missing residue
-    return structure
-
-# find all gz. files
-gz_files = []
-for dirpath, _, filenames in os.walk(root_dir):
-    for filename in filenames:
-        if filename.endswith('.gz') and not filename.startswith('._'):
-            gz_files.append(os.path.join(dirpath, filename))
-
-with tqdm(total=len(gz_files), desc="Processing files") as pbar:
-    for filepath in gz_files:
-        if not is_gzip_file(filepath):
-            pbar.update(1)
-            continue
-        
-        try:
-            with gzip.open(filepath, 'rb') as file:
-                uncompressed_content = file.read().decode('utf-8')
-            cif_block = gemmi.cif.read_string(uncompressed_content).sole_block()
-            structure = gemmi.make_structure_from_block(cif_block)
-        except Exception as e:
-            print(f"Error processing CIF content for file {filepath}: {e}")
-            pbar.update(1)
-            continue
-
-        temp_cif = os.path.join(output_dir, "temp.cif")
-        structure.make_mmcif_document().write_file(temp_cif)
-        
-        temp_output_cif = os.path.join(output_dir, "temp_h.cif")
-        command = ['gemmi', 'h', temp_cif, temp_output_cif]
-        max_retry = 8  # max trying times 
-        retry_count = 0
-        success = False
-        while retry_count < max_retry:
-            retry_count += 1
-            result = subprocess.run(command, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                success = True
-                break
-            else:
-                error_msg = result.stderr.strip()
-                if 'Monomer not in the library' in error_msg:
-                    monomer_name = error_msg.split('Monomer not in the library: ')[-1].split('.')[0]
-                    new_row = pd.DataFrame({"file": [filepath], "monomer": [monomer_name]})
-                    missing_monomers_df = pd.concat([missing_monomers_df, new_row], ignore_index=True)
-                    try:
-                        structure = remove_residue_from_structure(structure, monomer_name)
-                        structure.make_mmcif_document().write_file(temp_cif)
-                    except Exception as e:
-                        print(f"Error processing structure after removing monomer {monomer_name} for file {filepath}: {e}")
-                        pbar.update(1)
-                        continue
-                else:
-                    print(f"Failed to add hydrogens for file {filepath}")
-                    pbar.update(1)
-                    break
-
-        if success:
-            try:
-                modified_structure = gemmi.read_structure(temp_output_cif)
-                cif_string = modified_structure.make_mmcif_document().as_string()
-                relative_path = os.path.relpath(filepath, root_dir)
-                output_cif_gz = os.path.join(output_dir, relative_path)
-                output_cif_gz_dir = os.path.dirname(output_cif_gz)
-                if not os.path.exists(output_cif_gz_dir):
-                    os.makedirs(output_cif_gz_dir)
-                with open(temp_output_cif, 'rt') as temp_output_file:
-                    with gzip.open(output_cif_gz, 'wt') as gz_output:
-                        gz_output.writelines(temp_output_file)
-            except Exception as e:
-                print(f"Error writing gzipped CIF to file {output_cif_gz}: {e}")
-                pbar.update(1)
-        else:
-            print(f"Failed to add hydrogens for file {filepath} after {max_retry} retries")
-            pbar.update(1)
-
-        os.remove(temp_cif)
-        os.remove(temp_output_cif)
-        pbar.update(1)
-        missing_monomers_df.to_csv(missing_monomers_file, index=False)
-
-print("Successfully completed hydrogen adding.")
+addH.main()
 
 ring_atoms_dict = {
     'TRP': ['CD2', 'CE2', 'CE3', 'CZ2', 'CZ3', 'CH2'],
@@ -168,9 +72,9 @@ result = []
 with tqdm(total=len(gz_files), desc="Processing files") as pbar:
     for filepath in gz_files:
         try:
-            pdb_name = os.path.basename(filepath).replace('.cif.gz', '')  # get pdb name
+            pdb_name = os.path.basename(filepath).replace('.cif.gz', '')  # Get the PDB name
 
-            # read all .cif.gz files
+            # Read the gzipped CIF file
             with gzip.open(filepath, 'rb') as file:
                 uncompressed_content = file.read().decode('utf-8')
                 cif = gemmi.cif.read_string(uncompressed_content).sole_block()
@@ -188,12 +92,12 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
 
                             if len(pi_atoms) == len(ring_atoms_dict[residue.name]):
                                 pi_center, pi_center_array, pi_atoms_array, normal_vector, pi_b_factor_mean = get_info.piinfo(pi_atoms)
-                                # find X atoms
+                                # Find X neighbor atoms
                                 alt_pi = pi_atoms[0].altloc
                                 X_atoms = neighbor_search.find_atoms(pi_center, alt=alt_pi, min_dist=0.0, radius=6)
 
                                 if method == 'hudson':
-                                    # Hudson System
+                                    # Calculate using Hudson method
                                     for X_atom in X_atoms:
                                         X_cra, X_chain_name, X_residue_num, X_residue_name, X_element_name, X_atom_name, X_b_iso, X_pos, X_pos_array = get_info.atominfo(X_atom, model)
                                         mean_b_factor = (pi_b_factor_mean + X_b_iso) / 2
@@ -222,7 +126,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                                                     H_atom_name, H_pos_array, X_to_pi_center_distance, angle_in_degrees, projection_distance)
 
                                 elif method == 'plevin':
-                                    # Plevin System
+                                    # Calculate using Plevin method
                                     for X_atom in X_atoms:
                                         X_cra, X_chain_name, X_residue_num, X_residue_name, X_element_name, X_atom_name, X_b_iso, X_pos, X_pos_array = get_info.atominfo(X_atom, model)
                                         mean_b_factor = (pi_b_factor_mean + X_b_iso) / 2
@@ -254,11 +158,12 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
 
                             if len(pi_atoms) == len(trp_A_dict[residue.name]):
                                 pi_center, pi_center_array, pi_atoms_array, normal_vector, pi_b_factor_mean = get_info.piinfo(pi_atoms)
-                                # Find X atom
+                                # Find X neighbor atoms
                                 alt_pi = pi_atoms[0].altloc
                                 X_atoms = neighbor_search.find_atoms(pi_center, alt=alt_pi, min_dist=0.0, radius=6)
 
                                 if method == 'hudson':
+                                    # Calculate using Hudson method
                                     for X_atom in X_atoms:
                                         X_cra, X_chain_name, X_residue_num, X_residue_name, X_element_name, X_atom_name, X_b_iso, X_pos, X_pos_array = get_info.atominfo(X_atom, model)
                                         mean_b_factor = (pi_b_factor_mean + X_b_iso) / 2
@@ -287,6 +192,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                                                     H_atom_name, H_pos_array, X_to_pi_center_distance, angle_in_degrees, projection_distance)
 
                                 elif method == 'plevin':
+                                    # Calculate using Plevin method
                                     for X_atom in X_atoms:
                                         X_cra, X_chain_name, X_residue_num, X_residue_name, X_element_name, X_atom_name, X_b_iso, X_pos, X_pos_array = get_info.atominfo(X_atom, model)
                                         mean_b_factor = (pi_b_factor_mean + X_b_iso) / 2
@@ -321,7 +227,8 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
 
 print(f"Detect {len(result)} XH-π interactions totally")
 
-# save df to csv file
+# Save the calculation results to a CSV file
 df = pd.DataFrame(result)
 df.to_csv(os.path.join(output_dir, f'result_{method}.csv'), index=False)
 print(f'The result has been saved to {os.path.join(output_dir, f"result_{method}.csv")}')
+

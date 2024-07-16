@@ -3,7 +3,7 @@ def print_xhpi():
     pattern = [
         "CC     CC    HH   HH             PPPPPPP    II  ",
         " CC   CC     HH   HH             PP   PP    II ",
-        "  NN NN      HH   HH    Sean.W   PP   PP    II ",
+        "  NN NN      HH   HH     York    PP   PP    II ",
         "   NN        HHHHHHH    ------   PPPPPPP    II ",
         "  OO OO      HH   HH             PP         II ",
         " OO   OO     HH   HH             PP         II ",

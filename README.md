@@ -1,26 +1,14 @@
-
 # Characterization of XH-π Interactions in the Protein Data Bank using the Gemmi module
 
 ## Introduction
 
-This Python script is used to download CIF files from RCSB PDB, add hydrogen atoms, and analyze XH-π interactions based on Hudson or Plevin methods. The script's functions include:
-1. **Download PDB File**: Download the corresponding CIF file based on the 4-letter PDB name entered by the user.
-2. **Add Hydrogen Atoms**: Add hydrogen atoms to the PDB file using the `gemmi` tool.
-3. **Analyze XH-π Interaction**: Analyze the interaction between hydrogen atoms and aromatic rings using Hudson or Plevin methods.
-4. **Handle Missing Monomers**: Record the missing monomer information during the addition of hydrogen atoms.
-5. **Result Output**: Save the analysis results as a CSV file.
+This Python script is used to analyze XH-π interactions based on Hudson or Plevin system.
+1. **Download PDB File**: Download the corresponding CIF file based on the 4-letter PDB name.
+2. **Add Hydrogen Atoms**: Add hydrogen atoms to the PDB file using `gemmi`, record the missing monomers during the addition.
+3. **Analyze XH-π Interaction**: Analyze the XH-π Interaction using Hudson or Plevin system.
+4. **Result Output**: Save the analysis results as a CSV file.
 
 ## Installation requirements
-
-Please make sure the following dependencies are installed in your environment:
-
-- Python 3.x
-- `gemmi` library: for processing CIF files and operating structured data.
-- `tqdm` library: for displaying progress bars.
-- `wget` library: for downloading PDB files.
-- `pandas` library: for data processing and result saving.
-
-You can use the following commands to install these dependencies:
 
 ```bash
 pip install gemmi tqdm wget pandas
@@ -32,72 +20,62 @@ pip install gemmi tqdm wget pandas
 
 **Important:** You need to download the [Monomer library](https://github.com/MonomerLibrary/monomers) and unzip it to your local directory.
 
-After unzipping, set the environment variable `CLIBD_MON` to point to the unzipped directory in the code. 
+After unzipping, set the environment variable `CLIBD_MON` in `config.py` to point to the unzipped directory in the code. 
 
 For example, if you unzipped the Monomer library to `/path/to/monomers`, you can set the environment variable with the following code:
 
 ```bash
 os.environ['CLIBD_MON'] = '/Volumes/Sean/pdb_mirror/monomer/monomers'
 ```
-Please replace the path here in the source code.
-
-**Future plans:** We plan to automatically download and manage the Monomer library in future versions to simplify the setup process for users.
 
 ### 2. Run the script
-
-Navigate to the directory where the script is located in the terminal and run the following command:
 
 ```bash
 python script.py
 ```
 
-### 3. Provide PDB name
-
-After running the script, you will be prompted to enter the 4-letter PDB name. For example:
+### 3. Provide PDB name and  select the detection system
 
 ```
 Enter 4-letter PDB names separated by commas (e.g., 12as,5FJJ,1Gn0):
 ```
-Enter your list of PDB names separated by commas, all in uppercase. For example:
 
 ```
-12AS,5FJJ,1GN0
+Select the detection system (Hudson or Plevin):
 ```
 
-### 4. Select analysis method
-
-Next, you need to select the analysis method:
-
-```
-Enter method (Hudson or Plevin):
-```
-
-Enter `Hudson` or `Plevin` to select the analysis method. Please note that the entry is case sensitive.
-
-### 5. View results
+### 4. View results
 
 Once the analysis is complete, the results will be saved to a folder named with the current date. The folder will contain:
 
+- **`ABCD.cif.gz`**: the cif files that just download
 - **`missing_monomers.csv`**: records the missing monomer information during the addition of hydrogen atoms.
-- **`result_<method>.csv`**: Contains the results of the XH-π interaction analysis, `<method>` is the analysis method you selected (`Hudson` or `Plevin`).
+- **`result_<system>.csv`**: Contains the results of the XH-π interaction analysis, `<system>` is the analysis system selected (`Hudson` or `Plevin`).
 
 ## Example
 
-Here is an example execution flow:
-
-```bash
-python XHpi.py
 ```
-
-Input:
+Output directory created: ./2024-07-17
+Enter 4-letter PDB names separated by commas (e.g., ABCD,EFGH,IJKL):
+5fjj,12as
+PDB to be processed: 5FJJ, 12AS
+100% [............................................................................] 761830 / 761830 0/2 [00:00<?, ?it/s]
+Downloaded and saved 5FJJ to ./2024-07-17/5FJJ.cif.gz
+100% [............................................................................] 143540 / 143540:00<00:00,  1.35it/s]
+Downloaded and saved 12AS to ./2024-07-17/12AS.cif.gz
+Downloading PDB files: 100%|██████████████████████████████████████████████████████████████| 2/2 [00:01<00:00,  1.57it/s]
+Select the detection system (Hudson or Plevin): Hudson
+Processing files:   0%|                                                                           | 0/2 [00:00<?, ?it/s]
+Successfully added hydrogen atoms for file ./2024-07-17/5FJJ.cif.gz.
+Successfully saved the modified structure to ./2024-07-17/5FJJ.cif.gz.
+Processing files:  50%|█████████████████████████████████▌                                 | 1/2 [00:00<00:00,  1.24it/s]
+Successfully added hydrogen atoms for file ./2024-07-17/12AS.cif.gz.
+Successfully saved the modified structure to ./2024-07-17/12AS.cif.gz.
+Processing files: 100%|███████████████████████████████████████████████████████████████████| 2/2 [00:09<00:00,  4.70s/it]
+Detect 642 XH-π interactions totally
+The result has been saved to ./2024-07-17/result_hudson.csv
 
 ```
-Enter PDB names: 1C7H,2J6V,3C6T
-Enter method (Hudson or Plevin): Hudson
-```
-
-The script will download the CIF files of `1C7H`, `2J6V`, `3C6T`, add hydrogen atoms, and perform XH-π interaction analysis based on the Hudson method. The results will be saved to the `2024-07-15` folder.
-
 
 ## License
 

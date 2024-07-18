@@ -7,7 +7,7 @@ import gemmi
 from tqdm import tqdm
 from datetime import datetime
 import wget
-from calculate import get_info, calculator, append_result, rename, printer, Plevin, Plevin_append_result
+from calculate import get_info, Hudson_calculator, Hudson_append_result, rename, printer, Plevin_calculator, Plevin_append_result
 from addH import addH
 
 printer.print_xhpi()
@@ -102,7 +102,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                         mean_b_factor = (pi_b_factor_mean + X_b_iso) / 2
 
                                         if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
-                                            X_to_pi_center_distance = calculator.distance(X_pos_array, pi_center_array)
+                                            X_to_pi_center_distance = Hudson_calculator.distance(X_pos_array, pi_center_array)
 
                                             if X_to_pi_center_distance <= 4.5:
                                                 alt_H = X_atom.altloc
@@ -111,15 +111,15 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                                     H_cra, H_chain_name, H_residue_num, H_residue_name, H_element_name, H_atom_name, H_b_iso, H_pos, H_pos_array = get_info.atominfo(H_atom, model)
                                                     
                                                     if H_cra.atom.element == gemmi.Element('H'):
-                                                        angle_in_degrees = calculator.theta_angle(pi_center_array, X_pos_array, H_pos_array, normal_vector)
+                                                        angle_in_degrees = Hudson_calculator.theta_angle(pi_center_array, X_pos_array, H_pos_array, normal_vector)
                                                         
                                                         if angle_in_degrees is not None and angle_in_degrees <= 40.0:
-                                                            projection_distance = calculator.projection_distance(normal_vector, pi_center_array, X_pos_array)
+                                                            projection_distance = Hudson_calculator.projection_distance(normal_vector, pi_center_array, X_pos_array)
 
                                                             if (residue.name == 'HIS' and projection_distance <= 1.6) or (residue.name in ['TRP', 'TYR', 'PHE'] and projection_distance <= 2.0):
                                                                 pi_residue_name = rename.pi_rename(residue)
 
-                                                                append_result.append_result(result, pdb_name, resolution, chain, residue, mean_b_factor,
+                                                                Hudson_append_result.append_result(result, pdb_name, resolution, chain, residue, mean_b_factor,
                                                                     pi_residue_name, pi_center_array, normal_vector, pi_b_factor_mean, 
                                                                     X_chain_name, X_residue_num, X_residue_name, X_element_name, X_atom_name, X_pos_array, X_b_iso,
                                                                     H_atom_name, H_pos_array, X_to_pi_center_distance, angle_in_degrees, projection_distance)
@@ -131,10 +131,10 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                         mean_b_factor = (pi_b_factor_mean + X_b_iso) / 2
 
                                         if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
-                                            X_to_pi_center_distance = Plevin.distance(X_pos_array, pi_center_array)
+                                            X_to_pi_center_distance = Plevin_calculator.distance(X_pos_array, pi_center_array)
 
                                             if X_to_pi_center_distance < 4.3:
-                                                XPCN_angle = Plevin.XPCN_angle(X_pos_array, pi_center_array, normal_vector)
+                                                XPCN_angle = Plevin_calculator.XPCN_angle(X_pos_array, pi_center_array, normal_vector)
 
                                                 if XPCN_angle < 25.0:
                                                     alt_H = X_atom.altloc
@@ -142,10 +142,10 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                                     for H_atom in H_atoms:
                                                         H_cra, H_chain_name, H_residue_num, H_residue_name, H_element_name, H_atom_name, H_b_iso, H_pos, H_pos_array = get_info.atominfo(H_atom, model)
                                                         if H_cra.atom.element == gemmi.Element('H'):
-                                                            XH_picenterAngle = Plevin.XH_picenterAngle(pi_center_array, X_pos_array, H_pos_array) 
+                                                            XH_picenterAngle = Plevin_calculator.XH_picenterAngle(pi_center_array, X_pos_array, H_pos_array) 
                                                             
                                                             if XH_picenterAngle is not None and XH_picenterAngle > 120.0:                        
-                                                                pi_residue_name = 'TRP_A'
+                                                                pi_residue_name = rename.pi_rename(residue)
 
                                                                 Plevin_append_result.append_result(result, pdb_name, resolution, chain, residue, mean_b_factor,
                                                                     pi_residue_name, pi_center_array, normal_vector, pi_b_factor_mean, 
@@ -168,7 +168,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                         mean_b_factor = (pi_b_factor_mean + X_b_iso) / 2
 
                                         if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
-                                            X_to_pi_center_distance = calculator.distance(X_pos_array, pi_center_array)
+                                            X_to_pi_center_distance = Hudson_calculator.distance(X_pos_array, pi_center_array)
 
                                             if X_to_pi_center_distance <= 4.5:
                                                 alt_H = X_atom.altloc
@@ -177,15 +177,15 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                                     H_cra, H_chain_name, H_residue_num, H_residue_name, H_element_name, H_atom_name, H_b_iso, H_pos, H_pos_array = get_info.atominfo(H_atom, model)
                                                     
                                                     if H_cra.atom.element == gemmi.Element('H'):
-                                                        angle_in_degrees = calculator.theta_angle(pi_center_array, X_pos_array, H_pos_array, normal_vector)
+                                                        angle_in_degrees = Hudson_calculator.theta_angle(pi_center_array, X_pos_array, H_pos_array, normal_vector)
                                                         
                                                         if angle_in_degrees is not None and angle_in_degrees <= 40.0:
-                                                            projection_distance = calculator.projection_distance(normal_vector, pi_center_array, X_pos_array)
+                                                            projection_distance = Hudson_calculator.projection_distance(normal_vector, pi_center_array, X_pos_array)
 
                                                             if (residue.name == 'HIS' and projection_distance <= 1.6) or (residue.name in ['TRP', 'TYR', 'PHE'] and projection_distance <= 2.0):
                                                                 pi_residue_name = 'TRP_A'
 
-                                                                append_result.append_result(result, pdb_name, resolution, chain, residue, mean_b_factor,
+                                                                Hudson_append_result.append_result(result, pdb_name, resolution, chain, residue, mean_b_factor,
                                                                     pi_residue_name, pi_center_array, normal_vector, pi_b_factor_mean, 
                                                                     X_chain_name, X_residue_num, X_residue_name, X_element_name, X_atom_name, X_pos_array, X_b_iso,
                                                                     H_atom_name, H_pos_array, X_to_pi_center_distance, angle_in_degrees, projection_distance)
@@ -197,10 +197,10 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                         mean_b_factor = (pi_b_factor_mean + X_b_iso) / 2
 
                                         if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
-                                            X_to_pi_center_distance = Plevin.distance(X_pos_array, pi_center_array)
+                                            X_to_pi_center_distance = Plevin_calculator.distance(X_pos_array, pi_center_array)
 
                                             if X_to_pi_center_distance < 4.3:
-                                                XPCN_angle = Plevin.XPCN_angle(X_pos_array, pi_center_array, normal_vector)
+                                                XPCN_angle = Plevin_calculator.XPCN_angle(X_pos_array, pi_center_array, normal_vector)
 
                                                 if XPCN_angle < 25.0:
                                                     alt_H = X_atom.altloc
@@ -208,7 +208,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                                     for H_atom in H_atoms:
                                                         H_cra, H_chain_name, H_residue_num, H_residue_name, H_element_name, H_atom_name, H_b_iso, H_pos, H_pos_array = get_info.atominfo(H_atom, model)
                                                         if H_cra.atom.element == gemmi.Element('H'):
-                                                            XH_picenterAngle = Plevin.XH_picenterAngle(pi_center_array, X_pos_array, H_pos_array) 
+                                                            XH_picenterAngle = Plevin_calculator.XH_picenterAngle(pi_center_array, X_pos_array, H_pos_array) 
                                                             
                                                             if XH_picenterAngle is not None and XH_picenterAngle > 120.0:                        
                                                                 pi_residue_name = 'TRP_A'

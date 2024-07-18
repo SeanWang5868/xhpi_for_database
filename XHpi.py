@@ -22,7 +22,7 @@ print(f"Output directory created: {output_dir}")
 # Receive 4-letter PDB names for download
 pdb_names = []
 print("Enter 4-letter PDB names separated by commas (e.g., ABCD,EFGH,IJKL):")
-input_str = input("Enter PDB names: ").strip().upper()
+input_str = input().strip().upper()
 
 # Process the input string, remove spaces, and split by comma
 pdb_names = [name for name in input_str.split(',') if len(name) == 4]
@@ -31,9 +31,9 @@ if len(pdb_names) == 0:
     print("No valid 4-letter PDB names provided. Exiting.")
     sys.exit(1)
 
-print(f"PDB names to be processed: {', '.join(pdb_names)}")
+print(f"PDB to be processed: {', '.join(pdb_names)}")
 
-# Download PDB files and save them to the folder
+# Download PDB files
 for pdb in tqdm(pdb_names, desc="Downloading PDB files"):
     url = f"https://files.rcsb.org/download/{pdb}.cif.gz"
     output_path = os.path.join(output_dir, f"{pdb}.cif.gz")
@@ -48,8 +48,7 @@ for pdb in tqdm(pdb_names, desc="Downloading PDB files"):
         print(f"Error downloading {pdb}: {e}")
 
 # Get user input for the method
-method = input("Enter method (Hudson or Plevin): ").strip().lower()
-
+method = input("Select the detection system (Hudson or Plevin): ").strip().lower()
 if method not in ['hudson', 'plevin']:
     print("Invalid method. Please enter 'Hudson' or 'Plevin'.")
     sys.exit(1)
@@ -105,7 +104,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                         if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
                                             X_to_pi_center_distance = calculator.distance(X_pos_array, pi_center_array)
 
-                                            if X_to_pi_center_distance < 6:
+                                            if X_to_pi_center_distance <= 4.5:
                                                 alt_H = X_atom.altloc
                                                 H_atoms = neighbor_search.find_atoms(X_cra.atom.pos, alt=alt_H, min_dist=0.0, radius=1.3)
                                                 for H_atom in H_atoms:
@@ -134,7 +133,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                         if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
                                             X_to_pi_center_distance = Plevin.distance(X_pos_array, pi_center_array)
 
-                                            if X_to_pi_center_distance < 6:
+                                            if X_to_pi_center_distance < 4.3:
                                                 XPCN_angle = Plevin.XPCN_angle(X_pos_array, pi_center_array, normal_vector)
 
                                                 if XPCN_angle < 25.0:
@@ -171,7 +170,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                         if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
                                             X_to_pi_center_distance = calculator.distance(X_pos_array, pi_center_array)
 
-                                            if X_to_pi_center_distance < 6:
+                                            if X_to_pi_center_distance <= 4.5:
                                                 alt_H = X_atom.altloc
                                                 H_atoms = neighbor_search.find_atoms(X_cra.atom.pos, alt=alt_H, min_dist=0.0, radius=1.3)
                                                 for H_atom in H_atoms:
@@ -200,7 +199,7 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                                         if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
                                             X_to_pi_center_distance = Plevin.distance(X_pos_array, pi_center_array)
 
-                                            if X_to_pi_center_distance < 6:
+                                            if X_to_pi_center_distance < 4.3:
                                                 XPCN_angle = Plevin.XPCN_angle(X_pos_array, pi_center_array, normal_vector)
 
                                                 if XPCN_angle < 25.0:

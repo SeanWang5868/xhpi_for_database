@@ -18,7 +18,7 @@ pip install gemmi tqdm wget pandas
 
 ### 1. Set `CLIBD_MON` environment variable
 
-**Important:** You need to download the [Monomer library](https://github.com/MonomerLibrary/monomers) and unzip it to your local directory.
+**Important:** You need to download the [Monomer library](https://github.com/MonomerLibrary/monomers) and unzip it to your local directory, which is a necessary library for hydrogenating pdb structures.
 
 After unzipping, set the environment variable `CLIBD_MON` in `config.py` to point to the unzipped directory in the code. 
 

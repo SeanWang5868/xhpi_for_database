@@ -22,7 +22,7 @@ pip install gemmi tqdm wget pandas
 
 After unzipping, set the environment variable `CLIBD_MON` in `config.py` to point to the unzipped directory in the code. 
 
-For example, if you unzipped the Monomer library to `/path/to/monomers`, you can set the environment variable with the following code:
+For example, if you unzipped the Monomer library to `/Volumes/Sean/pdb_mirror/monomer/monomers`, you can set the environment variable with the following code:
 
 ```bash
 os.environ['CLIBD_MON'] = '/Volumes/Sean/pdb_mirror/monomer/monomers'

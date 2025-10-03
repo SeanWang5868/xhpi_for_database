@@ -8,7 +8,7 @@ from datetime import datetime
 
 # Directory path
 today = datetime.now().strftime('%Y-%m-%d')
-output_dir = os.path.join(".", today)
+output_dir = os.path.join("../output_dir", today)
 missing_monomers_file = os.path.join(output_dir, "missing_monomers.csv")
 
 def is_gzip_file(filepath):

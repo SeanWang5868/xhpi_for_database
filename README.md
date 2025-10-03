@@ -2,10 +2,10 @@
 
 ## Introduction
 
-This Python script is used to analyze XH-π interactions based on Hudson or Plevin system.
+This Python script is used to analyze XH-π interactions based on Plevin system.
 1. **Download PDB File**: Download the corresponding CIF file based on the 4-letter PDB name.
 2. **Add Hydrogen Atoms**: Add hydrogen atoms to the PDB file using `gemmi`, record the missing monomers during the addition.
-3. **Analyze XH-π Interaction**: Analyze the XH-π Interaction using Hudson or Plevin system.
+3. **Analyze XH-π Interaction**: Analyze the XH-π Interaction using Plevin system.
 4. **Result Output**: Save the analysis results as a CSV file.
 
 ## Installation requirements
@@ -38,10 +38,6 @@ python script.py
 
 ```
 Enter 4-letter PDB names separated by commas (e.g., 12as,5FJJ,1Gn0):
-```
-
-```
-Select the detection system (Hudson or Plevin):
 ```
 
 ### 4. View results
@@ -83,4 +79,4 @@ The project will be open source after viva.
 
 ## Contact Information
 
-If you have any questions or need help, please contact Sean Wang (bql506@york.ac.uk).
+If you have any questions or need help, please contact Sean Wang (sean.wang@york.ac.uk).

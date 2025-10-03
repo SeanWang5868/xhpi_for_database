@@ -79,12 +79,12 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                         
                         if residue.name in ring_atoms_dict:
                             found_interactions = detect_plevin.detect_plevin(
-                                pdb_name, resolution, model, chain, structure, residue)
+                                pdb_name, resolution, model, chain, structure, residue, ring_atoms_dict)
                             result.extend(found_interactions)
 
                         if residue.name in trp_A_dict:
                             found_interactions = detect_plevin.detect_plevin(
-                                pdb_name, resolution, model, chain, structure, residue)
+                                pdb_name, resolution, model, chain, structure, residue, trp_A_dict)
                             result.extend(found_interactions)
 
         except Exception as e:

@@ -2,26 +2,15 @@ import gemmi
 from calculate import get_info, rename, Plevin_calculator, Plevin_append_result
 
 
-ring_atoms_dict = {
-    'TRP': ['CD2', 'CE2', 'CE3', 'CZ2', 'CZ3', 'CH2'],
-    'TYR': ['CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'CG'],
-    'PHE': ['CD1', 'CD2', 'CE1', 'CE2', 'CZ', 'CG'],
-    'HIS': ['CE1', 'ND1', 'NE2', 'CG', 'CD2']}
-trp_A_dict = {
-    'TRP': ['CD1', 'CD2', 'NE1', 'CG', 'CE2']}
-
-
-
-
-def detect_plevin(pdb_name, resolution, model, chain, structure, residue):
+def detect_plevin(pdb_name, resolution, model, chain, structure, residue, atoms_dict):
     
     result_temp = []
     
     neighbor_search = gemmi.NeighborSearch(structure[0], structure.cell, 6)
     neighbor_search.populate(include_h=True)
-    pi_atoms = [atom for atom in residue if atom.name in ring_atoms_dict[residue.name]]
+    pi_atoms = [atom for atom in residue if atom.name in atoms_dict[residue.name]]
 
-    if len(pi_atoms) == len(ring_atoms_dict[residue.name]):
+    if len(pi_atoms) == len(atoms_dict[residue.name]):
         pi_center, pi_center_array, pi_atoms_array, normal_vector, pi_b_factor_mean = get_info.piinfo(pi_atoms)
         # Find X neighbor atoms
         alt_pi = pi_atoms[0].altloc
@@ -47,7 +36,7 @@ def detect_plevin(pdb_name, resolution, model, chain, structure, residue):
                                 XH_picenterAngle = Plevin_calculator.XH_picenterAngle(pi_center_array, X_pos_array, H_pos_array) 
                                                             
                                 if XH_picenterAngle is not None and XH_picenterAngle > 120.0:                        
-                                    pi_residue_name = rename.pi_rename(residue)
+                                    pi_residue_name = rename.pi_rename(residue,len(atoms_dict[residue.name]))
 
                                     Plevin_append_result.append_result(result_temp, pdb_name, resolution, chain, residue, mean_b_factor,
                                                     pi_residue_name, pi_center_array, normal_vector, pi_b_factor_mean, X_chain_name, X_residue_num,

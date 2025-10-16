@@ -24,10 +24,10 @@ def detect_plevin(pdb_name, resolution, model, chain, structure, residue, atoms_
             if X_cra.atom.element in [gemmi.Element('C'), gemmi.Element('N'), gemmi.Element('O'), gemmi.Element('S')]:
                 X_to_pi_center_distance = Plevin_calculator.distance(X_pos_array, pi_center_array)
 
-                if X_to_pi_center_distance < 4.3:
+                if X_to_pi_center_distance < 8.0:
                     XPCN_angle = Plevin_calculator.XPCN_angle(X_pos_array, pi_center_array, normal_vector)
 
-                    if XPCN_angle < 25.0:
+                    if XPCN_angle < 45.0:
                         alt_H = X_atom.altloc
                         H_atoms = neighbor_search.find_atoms(X_cra.atom.pos, alt=alt_H, min_dist=0.0, radius=1.3)
                         for H_atom in H_atoms:
@@ -35,7 +35,7 @@ def detect_plevin(pdb_name, resolution, model, chain, structure, residue, atoms_
                             if H_cra.atom.element == gemmi.Element('H'):
                                 XH_picenterAngle = Plevin_calculator.XH_picenterAngle(pi_center_array, X_pos_array, H_pos_array) 
                                                             
-                                if XH_picenterAngle is not None and XH_picenterAngle > 120.0:                        
+                                if XH_picenterAngle is not None and XH_picenterAngle > 90.0:                        
                                     pi_residue_name = rename.pi_rename(residue,len(atoms_dict[residue.name]))
 
                                     Plevin_append_result.append_result(result_temp, pdb_name, resolution, chain, residue, mean_b_factor,

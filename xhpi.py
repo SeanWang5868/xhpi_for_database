@@ -19,8 +19,8 @@ trp_A_dict = {
     'TRP': ['CD1', 'CD2', 'NE1', 'CG', 'CE2']}
 printer.print_xhpi()
 
-# input_directory = "/media/bql506/Sean/High_res_Non_re_addH"
-input_directory = "/media/bql506/Sean/test_addH"
+input_directory = "/media/bql506/Sean/High_res_Non_re_addH"
+# input_directory = "/media/bql506/Sean/test_addH"
 
 gz_files = []
 for dirpath, _, filenames in os.walk(input_directory):
@@ -51,22 +51,11 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                     for residue in chain:
                         
                         if residue.name in ring_atoms_dict:
-                            found_interactions = detect_plevin.detect_plevin(
-                                pdb_name, resolution, model, chain, structure, residue, ring_atoms_dict)
-                            # 使用键（key）来判断条件，这是最稳妥的方式
-                            conditions_met = (found_interactions[1] < 4.3 and
-                                found_interactions[2] > 120.0 and
-                                found_interactions[3] < 25.0)
-                            found_interactions['xhpi'] = int(conditions_met) 
+                            found_interactions = detect_plevin.detect_plevin(pdb_name, resolution, model, chain, structure, residue, ring_atoms_dict)
                             result.extend(found_interactions)     
 
                         if residue.name in trp_A_dict:
-                            found_interactions = detect_plevin.detect_plevin(
-                                pdb_name, resolution, model, chain, structure, residue, trp_A_dict)
-                            conditions_met = (found_interactions[1] < 4.3 and
-                                found_interactions[2] > 120.0 and
-                                found_interactions[3] < 25.0)
-                            found_interactions['xhpi'] = int(conditions_met) 
+                            found_interactions = detect_plevin.detect_plevin(pdb_name, resolution, model, chain, structure, residue, trp_A_dict)
                             result.extend(found_interactions)
 
         except Exception as e:
@@ -75,7 +64,8 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
         finally:
             pbar.update(1)
 
-print(f"Detected {len(result)} XH-π interactions in total.")
+xhpi_true_count = sum(1 for interaction in result if interaction.get('xhpi') == 1)
+print(f"Found {xhpi_true_count} interactions meeting the XH-π criteria")
 
 # Save the calculation results to a CSV file
 if result: # Only save if results were found

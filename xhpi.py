@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import gzip
 import gemmi
+import config
 from tqdm import tqdm
 from datetime import datetime
 import wget
@@ -16,48 +17,20 @@ ring_atoms_dict = {
     'HIS': ['CE1', 'ND1', 'NE2', 'CG', 'CD2']}
 trp_A_dict = {
     'TRP': ['CD1', 'CD2', 'NE1', 'CG', 'CE2']}
-
 printer.print_xhpi()
 
-# Create a folder with today's date as the name
-today = datetime.now().strftime('%Y-%m-%d')
-output_dir = os.path.join("../output_dir", today)
-os.makedirs(output_dir, exist_ok=True)
+# input_directory = "/media/bql506/Sean/High_res_Non_re_addH"
+input_directory = "/media/bql506/Sean/test_addH"
 
-print(f"Output directory created: {output_dir}")
+gz_files = []
+for dirpath, _, filenames in os.walk(input_directory):
+    for filename in filenames:
+        if filename.endswith(".cif.gz"):
+            # 将文件的完整路径添加到列表中
+            gz_files.append(os.path.join(dirpath, filename))
+gz_files
 
-# Receive 4-letter PDB names for download
-pdb_names = []
-print("Enter 4-letter PDB names separated by commas (e.g., ABCD,EFGH,IJKL):")
-input_str = input().strip().upper()
 
-# Process the input string, remove spaces, and split by comma
-pdb_names = [name for name in input_str.split(',') if len(name) == 4]
-
-if len(pdb_names) == 0:
-    print("No valid 4-letter PDB names provided. Exiting.")
-    sys.exit(1)
-
-print(f"PDB to be processed: {', '.join(pdb_names)}")
-
-# Download PDB files
-for pdb in tqdm(pdb_names, desc="Downloading PDB files"):
-    url = f"https://files.rcsb.org/download/{pdb}.cif.gz"
-    output_path = os.path.join(output_dir, f"{pdb}.cif.gz")
-    
-    if os.path.exists(output_path):
-        print(f"\n{pdb} already exists in {output_path}. Skipping download.")
-        continue
-    try:
-        wget.download(url, output_path)
-        print(f"\nDownloaded and saved {pdb} to {output_path}")
-    except Exception as e:
-        print(f"Error downloading {pdb}: {e}")
-
-# Process the downloaded files and calculate XHPI
-gz_files = [os.path.join(output_dir, f"{pdb_name}.cif.gz") for pdb_name in pdb_names]
-
-addH.main()
 
 result = []
 
@@ -80,11 +53,20 @@ with tqdm(total=len(gz_files), desc="Processing files") as pbar:
                         if residue.name in ring_atoms_dict:
                             found_interactions = detect_plevin.detect_plevin(
                                 pdb_name, resolution, model, chain, structure, residue, ring_atoms_dict)
-                            result.extend(found_interactions)
+                            # 使用键（key）来判断条件，这是最稳妥的方式
+                            conditions_met = (found_interactions[1] < 4.3 and
+                                found_interactions[2] > 120.0 and
+                                found_interactions[3] < 25.0)
+                            found_interactions['xhpi'] = int(conditions_met) 
+                            result.extend(found_interactions)     
 
                         if residue.name in trp_A_dict:
                             found_interactions = detect_plevin.detect_plevin(
                                 pdb_name, resolution, model, chain, structure, residue, trp_A_dict)
+                            conditions_met = (found_interactions[1] < 4.3 and
+                                found_interactions[2] > 120.0 and
+                                found_interactions[3] < 25.0)
+                            found_interactions['xhpi'] = int(conditions_met) 
                             result.extend(found_interactions)
 
         except Exception as e:
@@ -98,10 +80,8 @@ print(f"Detected {len(result)} XH-π interactions in total.")
 # Save the calculation results to a CSV file
 if result: # Only save if results were found
     df = pd.DataFrame(result)
-    output_path = os.path.join(output_dir, 'xhpi_output.csv')
+    output_path = os.path.join(input_directory, 'xhpi_output.csv')
     df.to_csv(output_path, index=False)
     print(f'The result has been saved to {output_path}')
 else:
     print("No interactions were found to save.")
-
-

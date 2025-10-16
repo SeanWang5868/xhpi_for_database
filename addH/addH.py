@@ -7,8 +7,8 @@ from tqdm import tqdm
 from datetime import datetime
 
 # Directory path
-today = datetime.now().strftime('%Y-%m-%d')
-output_dir = os.path.join("../output_dir", today)
+input_dir = "/y/people/bql506/pdb_mirror/0g"
+output_dir = "/y/people/bql506/pdb_mirror/0g/output"
 missing_monomers_file = os.path.join(output_dir, "missing_monomers.csv")
 
 def is_gzip_file(filepath):
@@ -36,8 +36,8 @@ def process_gz_file(filepath):
         print(f"Error processing CIF content for file {filepath}: {e}")
         return None
 
-    temp_cif = os.path.join(output_dir, "temp.cif")
-    temp_output_cif = os.path.join(output_dir, "temp_h.cif")
+    temp_cif = os.path.join(input_dir, "temp.cif")
+    temp_output_cif = os.path.join(input_dir, "temp_h.cif")
 
     try:
         structure.make_mmcif_document().write_file(temp_cif)
@@ -91,7 +91,7 @@ def save_modified_structure(temp_output_cif, original_filepath):
 def main():
     missing_monomers_df = pd.DataFrame(columns=["file", "monomer"])
     gz_files = [os.path.join(dirpath, filename)
-                for dirpath, _, filenames in os.walk(output_dir)
+                for dirpath, _, filenames in os.walk(input_dir)
                 for filename in filenames if filename.endswith('.gz') and not filename.startswith('._')]
 
     with tqdm(total=len(gz_files), desc="Processing files") as pbar:

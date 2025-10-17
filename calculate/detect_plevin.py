@@ -8,7 +8,7 @@ def detect_plevin(pdb_name, resolution, model, chain, structure, residue, atoms_
     result_temp = []
 
     # Prepare for neighbor search
-    neighbor_search = gemmi.NeighborSearch(structure[0], structure.cell, 6)
+    neighbor_search = gemmi.NeighborSearch(structure[0], structure.cell, 8)
     neighbor_search.populate(include_h=True)
     pi_atoms = [atom for atom in residue if atom.name in atoms_dict[residue.name]]
 
@@ -18,7 +18,7 @@ def detect_plevin(pdb_name, resolution, model, chain, structure, residue, atoms_
         alt_pi = pi_atoms[0].altloc
 
         # Find neighboring atoms (potential X atoms)
-        X_atoms = neighbor_search.find_atoms(pi_center, alt=alt_pi, min_dist=0.0, radius=6)
+        X_atoms = neighbor_search.find_atoms(pi_center, alt=alt_pi, min_dist=0.0, radius=8)
 
         # Evaluate each potential interacting atom
         for X_atom in X_atoms:

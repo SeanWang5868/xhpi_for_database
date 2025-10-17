@@ -19,7 +19,7 @@ trp_A_dict = {
     'TRP': ['CD1', 'CD2', 'NE1', 'CG', 'CE2']}
 printer.print_xhpi()
 
-input_directory = "/media/bql506/Sean/High_res_Non_re_addH"
+input_directory = "/y/people/bql506/Desktop/High_res_Non_re_addH"
 # input_directory = "/media/bql506/Sean/test_addH"
 
 gz_files = []
